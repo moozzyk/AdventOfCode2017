@@ -20,7 +20,7 @@ let rec solve input idx offset result =
     solve input (idx + 1) offset result
 
 let () =
-  let line = List.hd (read_lines "input") in
+  let line = List.hd (read_lines "input.txt") in
   let chars = explode line in
   let ints = List.map (fun i -> (int_of_char i) - 48) chars in
     print_endline (string_of_int (solve ints 0 1 0));
