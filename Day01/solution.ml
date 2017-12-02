@@ -12,16 +12,17 @@ let explode s =
     if i < 0 then l else exp (i - 1) (s.[i] :: l) in
   exp (String.length s - 1) []
 
-let rec solve input idx result =
+let rec solve input idx offset result =
   if idx = List.length input then result
-  else if List.nth input idx = List.nth input ((idx + 1) mod (List.length input)) then
-    solve input (idx + 1) (result + (List.nth input idx))
+  else if List.nth input idx = List.nth input ((idx + offset) mod (List.length input)) then
+    solve input (idx + 1) offset (result + (List.nth input idx))
   else
-    solve input (idx + 1) result
+    solve input (idx + 1) offset result
 
 let () =
   let line = List.hd (read_lines "input") in
   let chars = explode line in
   let ints = List.map (fun i -> (int_of_char i) - 48) chars in
-    print_endline (string_of_int (solve ints 0 0))
+    print_endline (string_of_int (solve ints 0 1 0));
+    print_endline (string_of_int (solve ints 0 ((String.length line) / 2) 0));
 
