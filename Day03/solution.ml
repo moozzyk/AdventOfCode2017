@@ -1,3 +1,10 @@
+(* Problem 1 - solved manually *)
+let solve input =
+    let tmp = int_of_float (sqrt (float_of_int (input - 1))) in
+    let side = if tmp land 1 = 1 then tmp + 1 else tmp in
+    let pos = (input - (side - 1) * (side - 1)) mod side in
+    if pos < side / 2 then side - pos else pos
+
 (* Problem 2 *)
 let fill_ring matrix size ring =
     let sum_neighbors matrix row col =
@@ -41,7 +48,9 @@ let print_matrix matrix size =
     done
 
 let () =
-    let size = 11 in
+    print_int (solve 277678); print_endline "";
+
+    let size = 11 in (* size has to be odd *)
     let matrix = Array.make_matrix size size 0 in
     matrix.(size / 2).(size / 2) <- 1;
     for ring = 1 to 4 do
