@@ -16,7 +16,7 @@ let list_to_arr list =
   let arr = Array.make (List.length list) 0 in
   fill list arr 0; arr
 
-let follow_jumps arr =
+let follow_jumps_1 arr =
   let steps = ref 0 in
   let idx = ref 0 in
   while !idx < (Array.length arr) do
@@ -27,7 +27,22 @@ let follow_jumps arr =
   done;
   !steps
 
+let follow_jumps_2 arr =
+  let steps = ref 0 in
+  let idx = ref 0 in
+  while !idx < (Array.length arr) do
+    let new_idx = !idx + arr.(!idx) in
+    if arr.(!idx) < 3 then
+        arr.(!idx) <- arr.(!idx) + 1
+    else
+        arr.(!idx) <- arr.(!idx) - 1;
+    idx := new_idx;
+    incr steps;
+  done;
+  !steps
+
 let () =
   let lines = read_lines "input.txt" in
   let arr = list_to_arr (List.map (fun i -> int_of_string i) lines) in
-  print_int (follow_jumps arr)
+  print_int (follow_jumps_1 (Array.copy arr)); print_endline "";
+  print_int (follow_jumps_2 (Array.copy arr)); print_endline "";
