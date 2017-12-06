@@ -73,4 +73,5 @@ let solve arr =
 let() =
   let line = List.hd (read_lines "input.txt") in
   let arr = list_to_arr (List.map (fun i -> int_of_string i) (split line "\t")) in
-  print_int (solve arr); print_endline ""
+  print_int (solve arr); print_endline "";
+  print_int ((solve arr) - 1); print_endline "";
