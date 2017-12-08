@@ -31,17 +31,19 @@ let process line registers =
   let cond = Str.matched_group 5 line in
   let cond_value = int_of_string (Str.matched_group 6 line) in
   ensure_reg registers reg; ensure_reg registers cond_reg;
+  let current = Hashtbl.find registers reg in
   if eval_cond registers cond_reg cond cond_value then
-    let current = Hashtbl.find registers reg in
     match operation with
-      | "inc" -> Hashtbl.replace registers reg (current + value)
-      | "dec" -> Hashtbl.replace registers reg (current - value)
+      | "inc" -> Hashtbl.replace registers reg (current + value); current + value
+      | "dec" -> Hashtbl.replace registers reg (current - value); current - value
       | _ -> raise (Invalid_argument "Invalid operation")
+  else
+    current
 
 let () =
   let registers = Hashtbl.create 1000 in
-  (* let regex = Str.regexp "\([a-z]+\) \([a-z]+\) (-?[0-9]+) if \([a-z]+\) .+ (-?[0-9]+)" in *)
   let lines = read_lines "input.txt" in
-  List.iter (fun line -> process line registers) lines;
+  print_int (List.fold_left (fun acc line -> max acc (process line registers)) min_int lines);
+  print_endline "";
   print_int (Hashtbl.fold (fun k v acc -> if v > acc then v else acc) registers min_int);
   print_endline "";
