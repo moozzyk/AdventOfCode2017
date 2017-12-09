@@ -30,7 +30,24 @@ let rec solve char tail garbage indent score =
     | '}' -> solve (List.hd tail) (List.tl tail) false (indent - 1) (score + indent)
     | _ -> solve (List.hd tail) (List.tl tail) false indent score
 
+let rec solve_2 char tail garbage count =
+  if tail = [] then
+    (* the assumption is that the string does not end with '>' *)
+    count
+  else if char = '!' then
+    solve_2 (List.hd (List.tl tail)) (List.tl (List.tl tail)) garbage count
+  else if garbage then
+    if char = '>' then
+      solve_2 (List.hd tail) (List.tl tail) false count
+    else
+      solve_2 (List.hd tail) (List.tl tail) garbage (count + 1)
+  else if char = '<' then
+    solve_2 (List.hd tail) (List.tl tail) true count
+  else
+    solve_2 (List.hd tail) (List.tl tail) false count
+
 let () =
   let line = List.hd (read_lines "input.txt") in
   let chars = explode line in
-  print_int (solve (List.hd chars) (List.tl chars) false 0 0); print_endline ""
+  print_int (solve (List.hd chars) (List.tl chars) false 0 0); print_endline "";
+  print_int (solve_2 (List.hd chars) (List.tl chars) false 0); print_endline ""
