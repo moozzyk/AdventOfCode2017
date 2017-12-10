@@ -22,7 +22,8 @@ let build_weights lines =
     let _ = Str.search_forward regex line 0 in
     Hashtbl.add weights (Str.matched_group 1 line) (int_of_string (Str.matched_group 2 line))
   in
-  List.iter (fun i -> add_weight weights i) lines; weights
+  List.iter (fun line -> add_weight weights line) lines;
+  weights
 
 let build_graph lines =
   let get_nodes line =
@@ -53,9 +54,32 @@ let find_root graph =
   let _ = Hashtbl.fold (fun k v (graph, candidates) -> dfs k graph candidates;(graph, candidates)) graph (graph, candidates) in
   Hashtbl.fold (fun k v _ -> print_endline k; k) candidates ""
 
+let rec all_same list previous =
+  match list with
+  | [] -> true
+  | hd::tl -> if previous < 0 || hd = previous then all_same tl hd else false
+
+let rec find_balance node graph weights =
+  let children = Hashtbl.find graph node in
+  let node_weight = Hashtbl.find weights node in
+  let children_weights = List.map (fun n -> find_balance n graph weights) children in
+  let balanced = all_same children_weights min_int in
+  if balanced = false then
+  begin
+    print_endline node;
+    List.iter (fun w -> print_int w; print_string " ") children_weights;
+    print_endline "";
+    List.iter (fun n -> print_int (Hashtbl.find weights n); print_string " ") children;
+    print_endline ""
+  end;
+  node_weight + (List.fold_left (fun w acc -> w + acc) 0 children_weights)
+
 let () =
   let lines = read_lines "input.txt" in
   let weights = build_weights lines in
   let graph = build_graph lines in
   let root = find_root graph in
-  print_endline root
+  print_endline root; print_endline "";
+  (* in the first unbalanced list subtract the weight of unbalanced node from the sum of weights of node and its descendants *)
+  let _ = find_balance root graph weights in
+  print_endline "";
