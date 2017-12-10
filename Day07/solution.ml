@@ -10,6 +10,11 @@ let read_lines name : string list =
 let split string separator =
   Str.split (Str.regexp separator) string
 
+let rec print_list l =
+  match l with
+  | [] -> print_endline ""
+  | hd::tl -> print_string hd; print_string " "; print_list tl
+
 let build_weights lines =
   let weights = Hashtbl.create 2000 in
   let add_weight weights line =
@@ -19,45 +24,38 @@ let build_weights lines =
   in
   List.iter (fun i -> add_weight weights i) lines; weights
 
-(* let build_graph lines =
-  let graph = Hashtbl.create 2000 in
-  let add_nodes graph line =
-    (* let nodes = split line " -> " in
-    let node = List.hd (split (List.hd nodes)) in
-    let neighbours = split (List.nth nodes 1) ", " in
-    Hashtbl.add graph (List.hd nodes) (List.tl nodes) *)
-    (* let regex = Str.regexp {|([a-z]|} in
-    let _ = Str.search_forward regex line 0 in
-    Hashtbl.add weights (Str.matched_group 1 line) "" *)
-    print_int 0
+let build_graph lines =
+  let get_nodes line =
+    let parts = split line " -> " in
+    let left = split (List.hd parts) " " in
+    let neighbours = if List.length parts > 1 then split (List.hd (List.tl parts)) ", " else [] in
+    (List.hd left)::neighbours
   in
-  List.iter (fun i -> add_nodes graph i) lines; graph *)
+  let add_nodes graph nodes =
+    Hashtbl.add graph (List.hd nodes) (List.tl nodes)
+  in
+  let graph = Hashtbl.create 2000 in
+  List.iter (fun line -> add_nodes graph (get_nodes line)) lines;
+  graph
 
+let rec dfs node graph candidates =
+  let rec recurse nodes graph candidates =
+    match nodes with
+    | [] -> ()
+    | hd::tl -> dfs hd graph candidates; recurse tl graph candidates; Hashtbl.remove candidates hd;
+  in
+  if Hashtbl.mem candidates node then
+    let children = Hashtbl.find graph node in
+    recurse children graph candidates
 
-let test line =
-  let regex = Str.regexp {|([a-z]|} in
-  let _ = Str.search_forward regex line 0 in
-  let rec match_list line group =
-    try
-      let g = Str.matched_group group line in
-      match_list line g + 1
-    with
-      Not_found -> print_string "no more"
-  match_list line regex
-  (* print_int 42 *)
+let find_root graph =
+  let candidates = Hashtbl.fold (fun k v c -> Hashtbl.add c k ""; c) graph (Hashtbl.create 2000) in
+  let _ = Hashtbl.fold (fun k v (graph, candidates) -> dfs k graph candidates;(graph, candidates)) graph (graph, candidates) in
+  Hashtbl.fold (fun k v _ -> print_endline k; k) candidates ""
 
 let () =
   let lines = read_lines "input.txt" in
   let weights = build_weights lines in
-  (* let graph = build_graph lines in *)
-  Hashtbl.iter (fun i j -> print_endline i) weights
-  (* print_int (Hashtbl.length weights); print_int (Hashtbl.length graph); *)
-
-  (* let s = "umnqkb (160) -> nbrvl, bcmbao, vfimqtl" in
-  let sp = split s "->" in
-  let f = List.hd sp in
-  let regex = Str.regexp {|^\([a-z]+\) (\([0-9]+\))|} in
-  let _ = Str.search_forward regex f 0 in
-  let m = Str.matched_group 1 f in
-  print_string (Str.matched_group 1 f); print_string (Str.matched_group 2 f);
-  print_string (List.nth sp 1) *)
+  let graph = build_graph lines in
+  let root = find_root graph in
+  print_endline root
