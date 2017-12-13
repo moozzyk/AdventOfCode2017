@@ -13,21 +13,32 @@ let split string separator =
 let print_int_endline sev =
   print_int sev; print_endline ""
 
-let rec get_severity firewall layer severity =
-  let get_layer_severity firewall layer =
+let rec get_collisions firewall layer delay collisions =
+  let is_clean firewall layer delay =
     let range = Hashtbl.find_opt firewall layer in
     match range with
-    | None -> 0
-    | Some r -> if layer mod (2 * (r - 1)) = 0 then r * layer else 0
+    | None -> true
+    | Some r -> (layer + delay) mod (2 * (r - 1)) != 0
   in
-  if layer > 100
-    then severity
+  if layer > 100 then
+    collisions
+  else
+    if is_clean firewall layer delay then
+      get_collisions firewall (layer + 1) delay collisions
     else
-        let layer_severity = get_layer_severity firewall layer in
-        get_severity firewall (layer + 1) (severity + layer_severity)
+      get_collisions firewall (layer + 1) delay (collisions@[layer])
+
+let rec find_delay firewall delay =
+  let collisions = get_collisions firewall 0 delay [] in
+  match collisions with
+  | [] -> delay
+  | _::_ -> find_delay firewall (delay + 1)
 
 let () =
   let lines = read_lines "input.txt" in
   let firewall = Hashtbl.create 100 in
   List.iter (fun l -> let s = split l ": " in Hashtbl.add firewall (int_of_string(List.hd s)) (int_of_string(List.nth s 1))) lines;
-  print_int_endline (get_severity firewall 0 0)
+  let collisions = get_collisions firewall 0 0 [] in
+  let severity = List.fold_left (fun acc layer -> acc + ((Hashtbl.find firewall layer) * layer)) 0 collisions in
+  print_int_endline severity;
+  print_int_endline (find_delay firewall 0)
