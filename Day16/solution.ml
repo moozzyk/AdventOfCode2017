@@ -10,7 +10,7 @@ let read_lines name : string list =
 let split string separator =
   Str.split (Str.regexp separator) string
 
-let solve operations =
+let run arr operations =
   let execute arr operation =
     let swap arr i j =
       let tmp = arr.(i) in
@@ -49,12 +49,32 @@ let solve operations =
         swap arr i j
     | _ -> raise(Invalid_argument "operation")
   in
-  let p = [|"a"; "b"; "c"; "d"; "e"; "f"; "g"; "h"; "i"; "j"; "k"; "l"; "m"; "n"; "o"; "p";|] in
-  List.iter (fun op -> execute p op) operations;
-  Array.iter (fun i -> print_string i) p;
-  print_endline ""
+  List.iter (fun op -> execute arr op) operations
+
+let solve operations num_iter =
+  let join arr = Array.fold_left (fun acc s -> acc ^ s) "" arr in
+  let rec aux arr i num_iter cache =
+    if i < num_iter then
+      let hash = join arr in
+      let cycle = Hashtbl.find_opt cache hash in
+        match cycle with
+        | None ->
+          Hashtbl.add cache hash i;
+          run arr operations;
+          aux arr (i + 1) num_iter cache
+        | Some c ->
+          let cycle_size = i - c in
+          let next_iter = i + (((num_iter - i) / cycle_size) * cycle_size) + 1 in
+          run arr operations;
+          aux arr next_iter num_iter cache
+  in
+  let arr = [|"a"; "b"; "c"; "d"; "e"; "f"; "g"; "h"; "i"; "j"; "k"; "l"; "m"; "n"; "o"; "p";|] in
+  let cache = Hashtbl.create 100000 in
+  aux arr 0 num_iter cache;
+  print_string (join arr); print_endline ""
 
 let () =
   let line = List.hd (read_lines "input.txt") in
   let operations = split line "," in
-  solve operations
+  solve operations 1;
+  solve operations 1000000000;
