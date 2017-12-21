@@ -45,18 +45,7 @@ let load_particles lines =
       acceleration = { x = n.(6); y = n.(7); z = n.(8) }
     }) numbers
 
-let tick particles =
-  let move particle =
-    particle.velocity.x <- particle.velocity.x + particle.acceleration.x;
-    particle.velocity.y <- particle.velocity.y + particle.acceleration.y;
-    particle.velocity.z <- particle.velocity.z + particle.acceleration.z;
-    particle.position.x <- particle.position.x + particle.velocity.x;
-    particle.position.y <- particle.position.y + particle.velocity.y;
-    particle.position.z <- particle.position.z + particle.velocity.z
-  in
-  List.iter (fun p -> move p) particles
-
-let solve particles =
+let solve_1 particles =
   let abs_triplet t = (abs t.x) + (abs t.y) + (abs t.z) in
   let rec aux particles i min_i min_p =
     match particles with
@@ -78,7 +67,64 @@ let solve particles =
   in
   aux particles 0 0 (List.hd particles)
 
+let tick particles =
+  let move particle =
+    particle.velocity.x <- particle.velocity.x + particle.acceleration.x;
+    particle.velocity.y <- particle.velocity.y + particle.acceleration.y;
+    particle.velocity.z <- particle.velocity.z + particle.acceleration.z;
+    particle.position.x <- particle.position.x + particle.velocity.x;
+    particle.position.y <- particle.position.y + particle.velocity.y;
+    particle.position.z <- particle.position.z + particle.velocity.z
+  in
+  List.iter (fun p -> move p) particles
+
+let remove_colliding particles =
+  let create_key triplet = string_of_int(triplet.x)^"_"^string_of_int(triplet.y)^"_"^string_of_int(triplet.z) in
+  let rec count_occurrences map particles =
+    match particles with
+    | [] -> ()
+    | hd::tl ->
+      let key = create_key hd.position in
+      let pos = Hashtbl.find_opt map key in
+      (match pos with
+        | None -> Hashtbl.add map key 1
+        | Some count -> Hashtbl.replace map key (count + 1));
+      count_occurrences map tl
+  in
+  let rec remove_duplicates occurrences particles output =
+    match particles with
+      | [] -> output
+      | hd::tl ->
+        let key = create_key hd.position in
+        if Hashtbl.find occurrences key > 1 then
+          remove_duplicates occurrences tl output
+        else
+          remove_duplicates occurrences tl output@[hd]
+  in
+  let occurrences = Hashtbl.create 1000 in
+  count_occurrences occurrences particles;
+  remove_duplicates occurrences particles []
+
+let solve_2 particles =
+  let rec aux particles iteration =
+    if iteration > 0 then
+    begin
+      let particles = remove_colliding particles in
+      tick particles;
+      aux particles (iteration - 1)
+    end
+    else
+      particles
+  in
+  (*
+    40 was calculated manually. The proper way to stop the loop is to check if
+    the particles are sorted using the function from line 60 to compare particles
+  *)
+  aux particles 40
+
 let () =
   let lines = read_lines "input.txt" in
   let particles = load_particles lines in
-  print_int (solve particles)
+  print_int (solve_1 particles); print_endline "";
+  let remaining = solve_2 particles in
+  print_int (List.length remaining); print_endline ""
