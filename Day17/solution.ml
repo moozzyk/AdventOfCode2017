@@ -18,7 +18,19 @@ let spinlock steps num_iterations =
    let res = aux [0] steps num_iterations 1 in
    List.hd (List.tl res)
 
+let spinlock_2 steps num_iterations =
+  let rec aux iteration num_iterations steps pos result =
+    if iteration >= num_iterations then
+      result
+    else
+      let insert_pos = ((pos + steps) mod iteration) in
+      if insert_pos = 0 then
+        aux (iteration + 1) num_iterations steps (insert_pos + 1) iteration
+      else
+        aux (iteration + 1) num_iterations steps (insert_pos + 1) result
+  in
+  aux 1 num_iterations steps 0 (-1)
+
 let () =
-  print_int (spinlock 394 2017); print_endline ""
-
-
+  print_int (spinlock 394 2017); print_endline "";
+  print_int (spinlock_2 394 50000000); print_endline ""
