@@ -53,6 +53,22 @@ let rec solve cpu code =
       | _ -> raise(Invalid_argument "Unexpected opcode"));
     solve cpu code
 
+let is_prime n =
+  let rec is_prime_aux n div =
+    if div > int_of_float (sqrt (float_of_int (n))) then
+      true
+    else
+      if n mod div = 0 then false else is_prime_aux n (div + 1)
+  in
+  is_prime_aux n 2
+
+let rec solve_2 f t s r =
+  if f < t then
+    let i = if is_prime f then 0 else 1 in
+    solve_2 (f + s) t s (r + i)
+  else
+    r
+
 let () =
   let code = read_lines "input.txt" in
   let code = List.map (fun l -> Array.of_list (split l " ")) code in
@@ -60,3 +76,6 @@ let () =
   let cpu = { ip = 0; registers = Array.make 8 0; num_muls = 0 } in
   solve cpu code;
   print_int cpu.num_muls; print_endline "";
+  print_int (solve_2 109900 (126900 + 1) 17 0); print_endline ""
+
+
