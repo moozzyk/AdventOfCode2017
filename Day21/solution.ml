@@ -118,4 +118,6 @@ let () =
   create_rulebook rules lines;
   let input = [|".#.";"..#";"###"|] in
   let res = solve rules input 5 in
+  print_int res; print_endline "";
+  let res = solve rules input 18 in
   print_int res; print_endline ""
